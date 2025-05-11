@@ -17,6 +17,12 @@ function App() {
   const drawingUtilsRef = useRef(null);
   const imageDrawingUtilsRef = useRef(null);
 
+  // Timer state variables
+  const [holdTime, setHoldTime] = useState(0); // Current hold time in seconds
+  const [targetTime, setTargetTime] = useState(5); // Target time to hold (5 seconds default)
+  const [timerActive, setTimerActive] = useState(false); // Whether timer is currently running
+  const [challengeComplete, setChallengeComplete] = useState(false); // Whether challenge is complete
+
   // Load the MediaPipe model
   useEffect(() => {
     const loadModel = async () => {
@@ -141,6 +147,45 @@ function App() {
     analyzeReferenceImage();
   }, [poseLandmarker]);
 
+  // Timer effect to track hold time
+  useEffect(() => {
+    let interval;
+
+    if (isPoseMatched && !challengeComplete) {
+      if (!timerActive) {
+        setTimerActive(true);
+        setHoldTime(0); // Reset timer when pose is initially matched
+      }
+
+      // Start the timer interval
+      interval = setInterval(() => {
+        setHoldTime((prevTime) => {
+          const newTime = prevTime + 0.1; // Increment by 0.1 seconds
+
+          // Check if target time reached
+          if (newTime >= targetTime && !challengeComplete) {
+            setChallengeComplete(true);
+            setShowAlert(true);
+            setTimeout(() => setShowAlert(false), 3000);
+            clearInterval(interval);
+          }
+
+          return newTime;
+        });
+      }, 100); // Update every 100ms for smoother progress
+    } else {
+      // If pose is no longer matched, reset timer
+      if (timerActive && !challengeComplete) {
+        setTimerActive(false);
+        setHoldTime(0);
+      }
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isPoseMatched, timerActive, challengeComplete, targetTime]);
+
   // Process video frames
   useEffect(() => {
     if (
@@ -157,9 +202,7 @@ function App() {
     const ctx = canvas.getContext("2d");
 
     let animationId;
-    let matchCounter = 0;
     const MATCH_THRESHOLD = 0.75;
-    const CONSECUTIVE_MATCHES_NEEDED = 10;
     let lastVideoTime = -1;
 
     const detect = async () => {
@@ -210,16 +253,6 @@ function App() {
           const currentMatch = similarity > MATCH_THRESHOLD;
 
           setIsPoseMatched(currentMatch);
-
-          if (currentMatch) {
-            matchCounter++;
-            if (matchCounter >= CONSECUTIVE_MATCHES_NEEDED && !showAlert) {
-              setShowAlert(true);
-              setTimeout(() => setShowAlert(false), 3000);
-            }
-          } else {
-            matchCounter = 0;
-          }
         }
       } catch (error) {
         console.error("Error in pose detection:", error);
@@ -238,7 +271,7 @@ function App() {
         cancelAnimationFrame(animationId);
       }
     };
-  }, [poseLandmarker, referencePose, showAlert]);
+  }, [poseLandmarker, referencePose]);
 
   // Compare two poses and return a similarity score between 0 and 1
   const comparePoses = (pose1, pose2) => {
@@ -282,9 +315,88 @@ function App() {
     return maxDistance > 0 ? 1 - totalDistance / maxDistance : 0;
   };
 
+  // Reset the challenge
+  const resetChallenge = () => {
+    setChallengeComplete(false);
+    setHoldTime(0);
+    setTimerActive(false);
+  };
+
+  // Change the target time
+  const handleTargetTimeChange = (e) => {
+    setTargetTime(parseInt(e.target.value, 10));
+    resetChallenge();
+  };
+
   return (
     <div style={{ textAlign: "center" }}>
-      <h1>Yoga Pose Detection</h1>
+      <h1>Yoga Pose Challenge</h1>
+
+      {/* Timer settings */}
+      <div style={{ margin: "20px 0" }}>
+        <label htmlFor="timeSelect">Hold pose for: </label>
+        <select
+          id="timeSelect"
+          value={targetTime}
+          onChange={handleTargetTimeChange}
+          style={{
+            padding: "5px 10px",
+            fontSize: "16px",
+            borderRadius: "4px",
+            margin: "0 10px",
+          }}
+        >
+          <option value="3">3 seconds</option>
+          <option value="5">5 seconds</option>
+          <option value="10">10 seconds</option>
+          <option value="15">15 seconds</option>
+          <option value="30">30 seconds</option>
+        </select>
+        <button
+          onClick={resetChallenge}
+          style={{
+            padding: "5px 15px",
+            fontSize: "16px",
+            backgroundColor: "#4285f4",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+          }}
+        >
+          Reset Challenge
+        </button>
+      </div>
+
+      {/* Timer progress bar */}
+      <div style={{ margin: "15px auto", width: "80%", maxWidth: "500px" }}>
+        <div
+          style={{
+            width: "100%",
+            backgroundColor: "#e0e0e0",
+            borderRadius: "10px",
+            height: "20px",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              width: `${(holdTime / targetTime) * 100}%`,
+              height: "100%",
+              backgroundColor: challengeComplete ? "#4caf50" : "#2196f3",
+              transition: "width 0.1s ease-in-out",
+            }}
+          ></div>
+        </div>
+        <p style={{ margin: "5px 0" }}>
+          {challengeComplete
+            ? "Challenge complete!"
+            : isPoseMatched
+            ? `Holding: ${holdTime.toFixed(1)}s / ${targetTime}s`
+            : "Align your pose"}
+        </p>
+      </div>
+
       <div
         style={{
           display: "flex",
@@ -319,7 +431,12 @@ function App() {
 
         {/* Webcam Feed */}
         <div style={{ position: "relative", width: "480px", height: "auto" }}>
-          <h2>Your Pose {isPoseMatched && "- Matching!"}</h2>
+          <h2>
+            Your Pose{" "}
+            {isPoseMatched && (
+              <span style={{ color: "#4caf50" }}>- Matching!</span>
+            )}
+          </h2>
           <div style={{ position: "relative", width: "100%", height: "auto" }}>
             <video
               ref={videoRef}
@@ -366,7 +483,7 @@ function App() {
             zIndex: 1000,
           }}
         >
-          Perfect Form!
+          Challenge Complete! Perfect Form!
         </div>
       )}
     </div>
