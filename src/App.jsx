@@ -23,6 +23,45 @@ function App() {
   const [timerActive, setTimerActive] = useState(false); // Whether timer is currently running
   const [challengeComplete, setChallengeComplete] = useState(false); // Whether challenge is complete
 
+  // Gamification state
+  const [score, setScore] = useState(0);
+  const [level, setLevel] = useState(1);
+  const [currentPoseIndex, setCurrentPoseIndex] = useState(0);
+  const [sequence, setSequence] = useState([
+    {
+      id: 1,
+      name: "Tree Pose",
+      imagePath: "/tree-pose.jpg",
+      completed: false,
+      points: 100,
+      difficultyMultiplier: 1.0,
+    },
+    {
+      id: 2,
+      name: "Warrior Pose II",
+      imagePath: "/warrior-pose.jpg",
+      completed: false,
+      points: 150,
+      difficultyMultiplier: 1.2,
+    },
+    {
+      id: 3,
+      name: "Downward Dog",
+      imagePath: "/downward-dog.jpg",
+      completed: false,
+      points: 200,
+      difficultyMultiplier: 1.5,
+    },
+    {
+      id: 4,
+      name: "Upward Dog",
+      imagePath: "/upward-dog.jpg",
+      completed: false,
+      points: 250,
+      difficultyMultiplier: 1.8,
+    },
+  ]);
+
   // Load the MediaPipe model
   useEffect(() => {
     const loadModel = async () => {
@@ -88,7 +127,7 @@ function App() {
     }
   }, []);
 
-  // Process the reference image once the model is loaded
+  // Process the reference image whenever the currentPoseIndex changes
   useEffect(() => {
     if (
       !poseLandmarker ||
@@ -97,6 +136,12 @@ function App() {
       !imageDrawingUtilsRef.current
     )
       return;
+
+    // Reset challenge state when changing poses
+    setChallengeComplete(false);
+    setHoldTime(0);
+    setTimerActive(false);
+    setReferencePose(null);
 
     const analyzeReferenceImage = async () => {
       // Wait for the image to load
@@ -145,7 +190,7 @@ function App() {
     };
 
     analyzeReferenceImage();
-  }, [poseLandmarker]);
+  }, [poseLandmarker, currentPoseIndex]);
 
   // Timer effect to track hold time
   useEffect(() => {
@@ -164,9 +209,32 @@ function App() {
 
           // Check if target time reached
           if (newTime >= targetTime && !challengeComplete) {
+            // Mark pose as completed and award points
+            const currentPose = sequence[currentPoseIndex];
+            const pointsEarned = Math.round(
+              currentPose.points *
+                currentPose.difficultyMultiplier *
+                (targetTime / 5) // Time multiplier - longer holds are worth more
+            );
+
+            // Update the sequence state
+            setSequence((prev) => {
+              const updated = [...prev];
+              updated[currentPoseIndex] = {
+                ...updated[currentPoseIndex],
+                completed: true,
+              };
+              return updated;
+            });
+
+            // Add points to score
+            setScore((prev) => prev + pointsEarned);
+
+            // Show completion alert with points
             setChallengeComplete(true);
             setShowAlert(true);
             setTimeout(() => setShowAlert(false), 3000);
+
             clearInterval(interval);
           }
 
@@ -184,7 +252,14 @@ function App() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isPoseMatched, timerActive, challengeComplete, targetTime]);
+  }, [
+    isPoseMatched,
+    timerActive,
+    challengeComplete,
+    targetTime,
+    sequence,
+    currentPoseIndex,
+  ]);
 
   // Process video frames
   useEffect(() => {
@@ -315,7 +390,7 @@ function App() {
     return maxDistance > 0 ? 1 - totalDistance / maxDistance : 0;
   };
 
-  // Reset the challenge
+  // Reset the current challenge
   const resetChallenge = () => {
     setChallengeComplete(false);
     setHoldTime(0);
@@ -328,9 +403,107 @@ function App() {
     resetChallenge();
   };
 
+  // Move to the next pose in the sequence
+  const moveToNextPose = () => {
+    if (currentPoseIndex < sequence.length - 1) {
+      setCurrentPoseIndex(currentPoseIndex + 1);
+      resetChallenge();
+    } else {
+      // Complete the level if at the end of the sequence
+      setLevel(level + 1);
+
+      // Reset the sequence for the next level
+      setSequence((prev) =>
+        prev.map((pose) => ({
+          ...pose,
+          completed: false,
+          // Increase difficulty for the next level
+          difficultyMultiplier: pose.difficultyMultiplier * 1.2,
+        }))
+      );
+
+      setCurrentPoseIndex(0);
+      resetChallenge();
+
+      // Show level completion message
+      setShowAlert(true);
+      setTimeout(() => setShowAlert(false), 3000);
+    }
+  };
+
+  // Go to a specific pose in the sequence
+  const goToPose = (index) => {
+    if (index < sequence.length) {
+      setCurrentPoseIndex(index);
+      resetChallenge();
+    }
+  };
+
   return (
     <div style={{ textAlign: "center" }}>
-      <h1>Yoga Pose Challenge</h1>
+      <h1>Yoga Pose Challenge - Level {level}</h1>
+
+      {/* Score display */}
+      <div
+        style={{
+          fontSize: "24px",
+          fontWeight: "bold",
+          margin: "10px 0",
+          color: "#1976d2",
+        }}
+      >
+        Score: {score}
+      </div>
+
+      {/* Sequence progress */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          margin: "15px 0",
+          gap: "10px",
+          flexWrap: "wrap",
+        }}
+      >
+        {sequence.map((pose, index) => (
+          <div
+            key={pose.id}
+            onClick={() => goToPose(index)}
+            style={{
+              width: "40px",
+              height: "40px",
+              borderRadius: "50%",
+              backgroundColor:
+                index === currentPoseIndex
+                  ? "#1976d2"
+                  : pose.completed
+                  ? "#4caf50"
+                  : "#e0e0e0",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              color:
+                index === currentPoseIndex || pose.completed
+                  ? "white"
+                  : "black",
+              fontWeight: "bold",
+              border: index === currentPoseIndex ? "2px solid #1976d2" : "none",
+              boxShadow:
+                index === currentPoseIndex
+                  ? "0 0 5px rgba(25, 118, 210, 0.5)"
+                  : "none",
+            }}
+          >
+            {index + 1}
+          </div>
+        ))}
+      </div>
+
+      {/* Current pose name */}
+      <h2 style={{ color: "#1976d2", marginBottom: "20px" }}>
+        {sequence[currentPoseIndex]?.name}
+      </h2>
 
       {/* Timer settings */}
       <div style={{ margin: "20px 0" }}>
@@ -362,10 +535,28 @@ function App() {
             border: "none",
             borderRadius: "4px",
             cursor: "pointer",
+            marginRight: "10px",
           }}
         >
-          Reset Challenge
+          Reset
         </button>
+
+        {challengeComplete && (
+          <button
+            onClick={moveToNextPose}
+            style={{
+              padding: "5px 15px",
+              fontSize: "16px",
+              backgroundColor: "#4caf50",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
+          >
+            Next Pose
+          </button>
+        )}
       </div>
 
       {/* Timer progress bar */}
@@ -411,8 +602,8 @@ function App() {
           <div style={{ position: "relative", width: "100%", height: "auto" }}>
             <img
               ref={imageRef}
-              src="/tree-pose.jpg"
-              alt="Tree Pose Reference"
+              src={sequence[currentPoseIndex]?.imagePath}
+              alt={`${sequence[currentPoseIndex]?.name} Reference`}
               style={{ maxWidth: "100%", height: "auto", display: "block" }}
             />
             <canvas
@@ -466,7 +657,7 @@ function App() {
         </div>
       </div>
 
-      {/* Perfect Form Alert */}
+      {/* Alert Message */}
       {showAlert && (
         <div
           style={{
@@ -483,7 +674,20 @@ function App() {
             zIndex: 1000,
           }}
         >
-          Challenge Complete! Perfect Form!
+          {challengeComplete ? (
+            <>
+              Challenge Complete!
+              <br />+
+              {Math.round(
+                sequence[currentPoseIndex].points *
+                  sequence[currentPoseIndex].difficultyMultiplier *
+                  (targetTime / 5)
+              )}{" "}
+              Points
+            </>
+          ) : (
+            <>Level {level} Complete! All poses mastered!</>
+          )}
         </div>
       )}
     </div>
