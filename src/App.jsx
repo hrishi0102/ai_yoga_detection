@@ -277,7 +277,7 @@ function App() {
     const ctx = canvas.getContext("2d");
 
     let animationId;
-    const MATCH_THRESHOLD = 0.75;
+    const MATCH_THRESHOLD = 0.8;
     let lastVideoTime = -1;
 
     const detect = async () => {
@@ -348,47 +348,72 @@ function App() {
     };
   }, [poseLandmarker, referencePose]);
 
-  // Compare two poses and return a similarity score between 0 and 1
-  const comparePoses = (pose1, pose2) => {
-    if (!pose1 || !pose2) return 0;
+  // Utility: get the 3D angle at point B formed by points A–B–C
+  function getAngle(A, B, C) {
+    const AB = { x: A.x - B.x, y: A.y - B.y };
+    const CB = { x: C.x - B.x, y: C.y - B.y };
+    const dot = AB.x * CB.x + AB.y * CB.y;
+    const magAB = Math.hypot(AB.x, AB.y);
+    const magCB = Math.hypot(CB.x, CB.y);
+    if (magAB === 0 || magCB === 0) return 0;
+    const cosAngle = dot / (magAB * magCB);
+    // Clamp float errors
+    const angle = Math.acos(Math.min(1, Math.max(-1, cosAngle)));
+    return (angle * 180) / Math.PI; // in degrees
+  }
 
-    // Key landmarks for yoga pose comparison
-    const keyLandmarkIndices = [
-      11,
-      12, // shoulders
-      23,
-      24, // hips
-      25,
-      26, // knees
-      27,
-      28, // ankles
-      15,
-      16, // wrists
+  // Normalize pose: translate to mid-hip at (0,0) and scale so torso length = 1
+  function normalizePose(landmarks) {
+    const lh = landmarks[23]; // left hip
+    const rh = landmarks[24]; // right hip
+    const ls = landmarks[11]; // left shoulder
+    const rs = landmarks[12]; // right shoulder
+
+    // Center = mid-hip
+    const center = { x: (lh.x + rh.x) / 2, y: (lh.y + rh.y) / 2 };
+    // Torso length = distance between mid-hip and mid-shoulder
+    const shoulderMid = { x: (ls.x + rs.x) / 2, y: (ls.y + rs.y) / 2 };
+    const torsoLen =
+      Math.hypot(shoulderMid.x - center.x, shoulderMid.y - center.y) || 1;
+
+    return landmarks.map((pt) => ({
+      x: (pt.x - center.x) / torsoLen,
+      y: (pt.y - center.y) / torsoLen,
+      z: pt.z != null ? pt.z / torsoLen : 0,
+    }));
+  }
+
+  // Compare two poses by joint angles
+  function comparePoses(pose1, pose2) {
+    if (!pose1 || !pose2) return 0;
+    // Normalize both
+    const P1 = normalizePose(pose1);
+    const P2 = normalizePose(pose2);
+
+    // List of triplets [A, B, C] for key joints
+    const joints = [
+      [11, 13, 15], // left shoulder: elbow
+      [12, 14, 16], // right shoulder: elbow
+      [13, 11, 23], // left elbow: shoulder
+      [14, 12, 24], // right elbow: shoulder
+      [23, 25, 27], // left hip: knee
+      [24, 26, 28], // right hip: knee
+      [25, 23, 11], // left knee: hip
+      [26, 24, 12], // right knee: hip
     ];
 
-    let totalDistance = 0;
-    let maxDistance = 0;
-
-    // Calculate the normalized distance between corresponding landmarks
-    keyLandmarkIndices.forEach((index) => {
-      const landmark1 = pose1[index];
-      const landmark2 = pose2[index];
-
-      if (landmark1 && landmark2) {
-        // Calculate Euclidean distance for normalized coordinates
-        const dist = Math.sqrt(
-          Math.pow(landmark1.x - landmark2.x, 2) +
-            Math.pow(landmark1.y - landmark2.y, 2)
-        );
-
-        totalDistance += dist;
-        maxDistance += 1.0; // Maximum possible distance for normalized coordinates
-      }
+    let totalDiff = 0;
+    joints.forEach(([a, b, c]) => {
+      const angle1 = getAngle(P1[a], P1[b], P1[c]);
+      const angle2 = getAngle(P2[a], P2[b], P2[c]);
+      totalDiff += Math.abs(angle1 - angle2);
     });
 
-    // Return similarity score (1 - normalized distance)
-    return maxDistance > 0 ? 1 - totalDistance / maxDistance : 0;
-  };
+    const avgDiff = totalDiff / joints.length; // in degrees
+    const maxTolerance = 45; // allow up to 45° avg difference
+    const similarity = Math.max(0, 1 - avgDiff / maxTolerance);
+    return similarity; // 0 (no match) to 1 (perfect)
+  }
 
   // Reset the current challenge
   const resetChallenge = () => {
