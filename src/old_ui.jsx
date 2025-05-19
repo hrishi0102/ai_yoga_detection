@@ -30,35 +30,35 @@ function App() {
   const [sequence, setSequence] = useState([
     {
       id: 1,
-      name: "Warrior Pose II",
-      imagePath: "/warrior-pose.jpg",
+      name: "Tree Pose",
+      imagePath: "/tree-pose.jpg",
       completed: false,
       points: 100,
       difficultyMultiplier: 1.0,
     },
     {
       id: 2,
-      name: "Upward Dog",
-      imagePath: "/upward-dog.jpg",
+      name: "Warrior Pose II",
+      imagePath: "/warrior-pose.jpg",
       completed: false,
       points: 150,
       difficultyMultiplier: 1.2,
     },
     {
       id: 3,
-      name: "Tree Pose",
-      imagePath: "/tree-pose.jpg",
-      completed: false,
-      points: 200,
-      difficultyMultiplier: 1.4,
-    },
-    {
-      id: 4,
       name: "Downward Dog",
       imagePath: "/downward-dog.jpg",
       completed: false,
+      points: 200,
+      difficultyMultiplier: 1.5,
+    },
+    {
+      id: 4,
+      name: "Upward Dog",
+      imagePath: "/upward-dog.jpg",
+      completed: false,
       points: 250,
-      difficultyMultiplier: 1.6,
+      difficultyMultiplier: 1.8,
     },
   ]);
 
@@ -417,18 +417,6 @@ function App() {
 
   // Reset the current challenge
   const resetChallenge = () => {
-    // Reset score
-    setScore(0);
-
-    // Reset pose completion status
-    setSequence((prev) =>
-      prev.map((pose) => ({
-        ...pose,
-        completed: false,
-      }))
-    );
-
-    // Reset other states
     setChallengeComplete(false);
     setHoldTime(0);
     setTimerActive(false);
@@ -442,14 +430,9 @@ function App() {
 
   // Move to the next pose in the sequence
   const moveToNextPose = () => {
-    // Reset challenge states without resetting the score
-    setChallengeComplete(false);
-    setHoldTime(0);
-    setTimerActive(false);
-    
     if (currentPoseIndex < sequence.length - 1) {
-      // Move to next pose
       setCurrentPoseIndex(currentPoseIndex + 1);
+      resetChallenge();
     } else {
       // Complete the level if at the end of the sequence
       setLevel(level + 1);
@@ -464,8 +447,8 @@ function App() {
         }))
       );
 
-      // Start from the first pose of the new level
       setCurrentPoseIndex(0);
+      resetChallenge();
 
       // Show level completion message
       setShowAlert(true);
@@ -477,261 +460,64 @@ function App() {
   const goToPose = (index) => {
     if (index < sequence.length) {
       setCurrentPoseIndex(index);
-      // Reset challenge states without resetting the score
-      setChallengeComplete(false);
-      setHoldTime(0);
-      setTimerActive(false);
+      resetChallenge();
     }
   };
 
-  // Styles for the new UI
-  const styles = {
-    container: {
-      textAlign: "center",
-      fontFamily: "'Poppins', sans-serif",
-      maxWidth: "1200px",
-      margin: "0 auto",
-      padding: "20px",
-      backgroundColor: "#f8f9fa",
-      borderRadius: "15px",
-      boxShadow: "0 10px 30px rgba(0, 0, 0, 0.1)",
-    },
-    header: {
-      background: "linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)",
-      color: "white",
-      padding: "20px",
-      borderRadius: "10px",
-      marginBottom: "25px",
-      boxShadow: "0 4px 15px rgba(99, 102, 241, 0.3)",
-    },
-    title: {
-      fontSize: "2.5rem",
-      margin: "0 0 10px 0",
-      fontWeight: "700",
-    },
-    scoreContainer: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      maxWidth: "400px",
-      margin: "0 auto 20px",
-      padding: "15px",
-      borderRadius: "10px",
-      backgroundColor: "white",
-      boxShadow: "0 4px 10px rgba(0, 0, 0, 0.05)",
-    },
-    scoreItem: {
-      textAlign: "center",
-    },
-    scoreLabel: {
-      fontSize: "0.9rem",
-      color: "#6b7280",
-      marginBottom: "5px",
-    },
-    scoreValue: {
-      fontSize: "1.8rem",
-      fontWeight: "700",
-      color: "#4f46e5",
-    },
-    sequenceContainer: {
-      display: "flex",
-      justifyContent: "center",
-      margin: "25px 0",
-      gap: "15px",
-      flexWrap: "wrap",
-    },
-    poseIndicator: {
-      width: "50px",
-      height: "50px",
-      borderRadius: "50%",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      cursor: "pointer",
-      fontWeight: "bold",
-      transition: "all 0.3s ease",
-    },
-    currentPoseName: {
-      fontSize: "1.8rem",
-      color: "#4f46e5",
-      margin: "0 0 25px 0",
-      fontWeight: "600",
-    },
-    controlsContainer: {
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      gap: "15px",
-      margin: "20px 0",
-      flexWrap: "wrap",
-    },
-    select: {
-      padding: "10px 20px",
-      fontSize: "1rem",
-      borderRadius: "8px",
-      border: "1px solid #e5e7eb",
-      backgroundColor: "white",
-      boxShadow: "0 2px 5px rgba(0, 0, 0, 0.05)",
-      outline: "none",
-      cursor: "pointer",
-    },
-    button: {
-      padding: "10px 25px",
-      fontSize: "1rem",
-      fontWeight: "600",
-      borderRadius: "8px",
-      border: "none",
-      cursor: "pointer",
-      transition: "all 0.2s ease",
-    },
-    resetButton: {
-      backgroundColor: "#6366f1",
-      color: "white",
-    },
-    nextButton: {
-      backgroundColor: "#10b981",
-      color: "white",
-    },
-    progressBarContainer: {
-      margin: "25px auto",
-      width: "80%",
-      maxWidth: "600px",
-    },
-    progressBarOuter: {
-      width: "100%",
-      backgroundColor: "#e5e7eb",
-      borderRadius: "10px",
-      height: "15px",
-      overflow: "hidden",
-      boxShadow: "inset 0 2px 4px rgba(0, 0, 0, 0.1)",
-    },
-    progressBarInner: {
-      height: "100%",
-      transition: "width 0.1s ease-in-out",
-      borderRadius: "10px",
-    },
-    progressText: {
-      margin: "10px 0",
-      fontSize: "1rem",
-      color: "#4b5563",
-    },
-    contentContainer: {
-      display: "flex",
-      justifyContent: "center",
-      gap: "30px",
-      flexWrap: "wrap",
-      margin: "20px 0",
-    },
-    videoContainer: {
-      position: "relative",
-      width: "480px",
-      borderRadius: "15px",
-      overflow: "hidden",
-      boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
-    },
-    videoTitle: {
-      backgroundColor: "rgba(79, 70, 229, 0.9)",
-      color: "white",
-      padding: "12px 20px",
-      margin: "0",
-      fontSize: "1.2rem",
-      fontWeight: "600",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    matchingIndicator: {
-      backgroundColor: "#10b981",
-      color: "white",
-      padding: "5px 10px",
-      borderRadius: "20px",
-      fontSize: "0.9rem",
-      fontWeight: "600",
-    },
-    videoElement: {
-      transform: "scaleX(-1)",
-      maxWidth: "100%",
-      height: "auto",
-      display: "block",
-      backgroundColor: "#000",
-    },
-    canvasOverlay: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      width: "100%",
-      height: "100%",
-      pointerEvents: "none",
-    },
-    alertContainer: {
-      position: "fixed",
-      top: "20px",
-      left: "50%",
-      transform: "translateX(-50%)",
-      background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-      color: "white",
-      padding: "20px 40px",
-      borderRadius: "10px",
-      fontSize: "1.5rem",
-      fontWeight: "bold",
-      zIndex: 1000,
-      boxShadow: "0 10px 25px rgba(16, 185, 129, 0.4)",
-      animation: "slideDown 0.5s ease-out",
-    },
-  };
-
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <h1 style={styles.title}>Yoga Pose Challenge</h1>
-        <p style={{ margin: 0, fontSize: "1.2rem" }}>
-          Master the poses, level up your practice
-        </p>
-      </div>
+    <div style={{ textAlign: "center" }}>
+      <h1>Yoga Pose Challenge - Level {level}</h1>
 
-      {/* Score and level display */}
-      <div style={styles.scoreContainer}>
-        <div style={styles.scoreItem}>
-          <div style={styles.scoreLabel}>LEVEL</div>
-          <div style={styles.scoreValue}>{level}</div>
-        </div>
-        <div style={styles.scoreItem}>
-          <div style={styles.scoreLabel}>SCORE</div>
-          <div style={styles.scoreValue}>{score}</div>
-        </div>
-        <div style={styles.scoreItem}>
-          <div style={styles.scoreLabel}>POSE</div>
-          <div style={styles.scoreValue}>
-            {currentPoseIndex + 1}/{sequence.length}
-          </div>
-        </div>
+      {/* Score display */}
+      <div
+        style={{
+          fontSize: "24px",
+          fontWeight: "bold",
+          margin: "10px 0",
+          color: "#1976d2",
+        }}
+      >
+        Score: {score}
       </div>
 
       {/* Sequence progress */}
-      <div style={styles.sequenceContainer}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          margin: "15px 0",
+          gap: "10px",
+          flexWrap: "wrap",
+        }}
+      >
         {sequence.map((pose, index) => (
           <div
             key={pose.id}
             onClick={() => goToPose(index)}
             style={{
-              ...styles.poseIndicator,
+              width: "40px",
+              height: "40px",
+              borderRadius: "50%",
               backgroundColor:
                 index === currentPoseIndex
-                  ? "#4f46e5"
+                  ? "#1976d2"
                   : pose.completed
-                  ? "#10b981"
-                  : "#e5e7eb",
+                  ? "#4caf50"
+                  : "#e0e0e0",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
               color:
                 index === currentPoseIndex || pose.completed
                   ? "white"
-                  : "#6b7280",
+                  : "black",
+              fontWeight: "bold",
+              border: index === currentPoseIndex ? "2px solid #1976d2" : "none",
               boxShadow:
                 index === currentPoseIndex
-                  ? "0 0 15px rgba(79, 70, 229, 0.5)"
-                  : pose.completed
-                  ? "0 0 10px rgba(16, 185, 129, 0.3)"
+                  ? "0 0 5px rgba(25, 118, 210, 0.5)"
                   : "none",
-              transform: index === currentPoseIndex ? "scale(1.1)" : "scale(1)",
             }}
           >
             {index + 1}
@@ -740,21 +526,23 @@ function App() {
       </div>
 
       {/* Current pose name */}
-      <h2 style={styles.currentPoseName}>{sequence[currentPoseIndex]?.name}</h2>
+      <h2 style={{ color: "#1976d2", marginBottom: "20px" }}>
+        {sequence[currentPoseIndex]?.name}
+      </h2>
 
       {/* Timer settings */}
-      <div style={styles.controlsContainer}>
-        <label
-          htmlFor="timeSelect"
-          style={{ fontSize: "1rem", color: "#4b5563" }}
-        >
-          Hold pose for:
-        </label>
+      <div style={{ margin: "20px 0" }}>
+        <label htmlFor="timeSelect">Hold pose for: </label>
         <select
           id="timeSelect"
           value={targetTime}
           onChange={handleTargetTimeChange}
-          style={styles.select}
+          style={{
+            padding: "5px 10px",
+            fontSize: "16px",
+            borderRadius: "4px",
+            margin: "0 10px",
+          }}
         >
           <option value="3">3 seconds</option>
           <option value="5">5 seconds</option>
@@ -764,7 +552,16 @@ function App() {
         </select>
         <button
           onClick={resetChallenge}
-          style={{ ...styles.button, ...styles.resetButton }}
+          style={{
+            padding: "5px 15px",
+            fontSize: "16px",
+            backgroundColor: "#4285f4",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+            marginRight: "10px",
+          }}
         >
           Reset
         </button>
@@ -772,7 +569,15 @@ function App() {
         {challengeComplete && (
           <button
             onClick={moveToNextPose}
-            style={{ ...styles.button, ...styles.nextButton }}
+            style={{
+              padding: "5px 15px",
+              fontSize: "16px",
+              backgroundColor: "#4caf50",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
           >
             Next Pose
           </button>
@@ -780,29 +585,45 @@ function App() {
       </div>
 
       {/* Timer progress bar */}
-      <div style={styles.progressBarContainer}>
-        <div style={styles.progressBarOuter}>
+      <div style={{ margin: "15px auto", width: "80%", maxWidth: "500px" }}>
+        <div
+          style={{
+            width: "100%",
+            backgroundColor: "#e0e0e0",
+            borderRadius: "10px",
+            height: "20px",
+            overflow: "hidden",
+          }}
+        >
           <div
             style={{
-              ...styles.progressBarInner,
               width: `${(holdTime / targetTime) * 100}%`,
-              backgroundColor: challengeComplete ? "#10b981" : "#4f46e5",
+              height: "100%",
+              backgroundColor: challengeComplete ? "#4caf50" : "#2196f3",
+              transition: "width 0.1s ease-in-out",
             }}
           ></div>
         </div>
-        <p style={styles.progressText}>
+        <p style={{ margin: "5px 0" }}>
           {challengeComplete
-            ? "Challenge complete! 🎉"
+            ? "Challenge complete!"
             : isPoseMatched
             ? `Holding: ${holdTime.toFixed(1)}s / ${targetTime}s`
-            : "Align your pose with the reference image"}
+            : "Align your pose"}
         </p>
       </div>
 
-      <div style={styles.contentContainer}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          gap: "20px",
+          flexWrap: "wrap",
+        }}
+      >
         {/* Reference Image */}
-        <div style={styles.videoContainer}>
-          <h2 style={styles.videoTitle}>Reference Pose</h2>
+        <div style={{ position: "relative", width: "480px", height: "auto" }}>
+          <h2>Reference Pose</h2>
           <div style={{ position: "relative", width: "100%", height: "auto" }}>
             <img
               ref={imageRef}
@@ -813,25 +634,34 @@ function App() {
             <canvas
               ref={imageCanvasRef}
               style={{
-                ...styles.canvasOverlay,
-                transform: "none",
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                pointerEvents: "none",
               }}
             />
           </div>
         </div>
 
         {/* Webcam Feed */}
-        <div style={styles.videoContainer}>
-          <h2 style={styles.videoTitle}>
-            Your Pose
+        <div style={{ position: "relative", width: "480px", height: "auto" }}>
+          <h2>
+            Your Pose{" "}
             {isPoseMatched && (
-              <span style={styles.matchingIndicator}>Matching!</span>
+              <span style={{ color: "#4caf50" }}>- Matching!</span>
             )}
           </h2>
           <div style={{ position: "relative", width: "100%", height: "auto" }}>
             <video
               ref={videoRef}
-              style={styles.videoElement}
+              style={{
+                transform: "scaleX(-1)",
+                maxWidth: "100%",
+                height: "auto",
+                display: "block",
+              }}
               muted
               autoPlay
               playsInline
@@ -839,8 +669,13 @@ function App() {
             <canvas
               ref={canvasRef}
               style={{
-                ...styles.canvasOverlay,
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
                 transform: "scaleX(-1)",
+                pointerEvents: "none",
               }}
             />
           </div>
@@ -849,7 +684,21 @@ function App() {
 
       {/* Alert Message */}
       {showAlert && (
-        <div style={styles.alertContainer}>
+        <div
+          style={{
+            position: "fixed",
+            top: "20px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "#4CAF50",
+            color: "white",
+            padding: "15px 30px",
+            borderRadius: "5px",
+            fontSize: "24px",
+            fontWeight: "bold",
+            zIndex: 1000,
+          }}
+        >
           {challengeComplete ? (
             <>
               Challenge Complete!
