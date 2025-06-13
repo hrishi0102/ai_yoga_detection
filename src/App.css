@@ -1,0 +1,266 @@
+/* Replace the contents of your existing src/App.css with this: */
+
+/* Main container styles */
+.container {
+  text-align: center;
+  font-family: "Poppins", sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.header {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.title {
+  font-size: 2.5rem;
+  margin: 0 0 10px 0;
+  font-weight: 700;
+}
+
+.score-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 400px;
+  margin: 0 auto 20px;
+  padding: 15px;
+  border-radius: 10px;
+  background-color: white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.score-item {
+  text-align: center;
+}
+
+.score-label {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-bottom: 5px;
+}
+
+.score-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #4f46e5;
+}
+
+.sequence-container {
+  display: flex;
+  justify-content: center;
+  margin: 25px 0;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.pose-indicator {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.pose-indicator.current {
+  background-color: #4f46e5;
+  color: white;
+  box-shadow: 0 0 15px rgba(79, 70, 229, 0.5);
+  transform: scale(1.1);
+}
+
+.pose-indicator.completed {
+  background-color: #10b981;
+  color: white;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+.pose-indicator.default {
+  background-color: #e5e7eb;
+  color: #6b7280;
+}
+
+.current-pose-name {
+  font-size: 1.8rem;
+  color: #4f46e5;
+  margin: 0 0 25px 0;
+  font-weight: 600;
+}
+
+.controls-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.select {
+  padding: 10px 20px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  outline: none;
+  cursor: pointer;
+}
+
+.button {
+  padding: 10px 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.reset-button {
+  background-color: #6366f1;
+  color: white;
+}
+
+.next-button {
+  background-color: #10b981;
+  color: white;
+}
+
+.progress-bar-container {
+  margin: 25px auto;
+  width: 80%;
+  max-width: 600px;
+}
+
+.progress-bar-outer {
+  width: 100%;
+  background-color: #e5e7eb;
+  border-radius: 10px;
+  height: 15px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar-inner {
+  height: 100%;
+  transition: width 0.1s ease-in-out;
+  border-radius: 10px;
+}
+
+.progress-bar-inner.complete {
+  background-color: #10b981;
+}
+
+.progress-bar-inner.active {
+  background-color: #4f46e5;
+}
+
+.progress-text {
+  margin: 10px 0;
+  font-size: 1rem;
+  color: #4b5563;
+}
+
+.content-container {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+
+.video-container {
+  position: relative;
+  width: 480px;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.video-title {
+  background-color: rgba(79, 70, 229, 0.9);
+  color: white;
+  padding: 12px 20px;
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.matching-indicator {
+  background-color: #10b981;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.video-element {
+  transform: scaleX(-1);
+  max-width: 100%;
+  height: auto;
+  display: block;
+  background-color: #000;
+}
+
+.canvas-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.canvas-overlay.flipped {
+  transform: scaleX(-1);
+}
+
+.alert-container {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 20px 40px;
+  border-radius: 10px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  z-index: 1000;
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+  animation: slideDown 0.5s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateX(-50%) translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+.controls-label {
+  font-size: 1rem;
+  color: #4b5563;
+}
